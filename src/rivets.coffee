@@ -272,10 +272,15 @@ getInputValue = (el) ->
 
     switch el[0].type
       when 'checkbox' then el.is ':checked'
+      when 'radio' then jQuery("[name=\"#{el[0].name}\"]:checked").val()
       else el.val()
   else
     switch el.type
       when 'checkbox' then el.checked
+      when 'radio'
+        for el in document.getElementByName(el.name)
+          return el.value if el.checked
+        null
       when 'select-multiple' then o.value for o in el when o.selected
       else el.value
 
@@ -429,6 +434,7 @@ factory = (exports) ->
   # instance.
   exports.bind = (el, models = {}, options = {}) ->
     view = new Rivets.View(el, models, options)
+    view.publish() if options.publish
     view.bind()
     view
 

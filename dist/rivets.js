@@ -58,14 +58,14 @@
     }
 
     Binding.prototype.formattedValue = function(value) {
-      var args, formatter, id, _i, _len, _ref, _ref1, _ref2, _ref3;
+      var args, formatter, id, _i, _len, _ref;
 
       _ref = this.formatters;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         formatter = _ref[_i];
         args = formatter.split(/\s+/);
         id = args.shift();
-        formatter = this.model[id] instanceof Function ? this.model[id] : ((_ref1 = this.options) != null ? (_ref2 = _ref1.bindingOptions) != null ? (_ref3 = _ref2.formatters) != null ? _ref3[id] : void 0 : void 0 : void 0) instanceof Function ? this.options.bindingOptions.formatters[id] : this.view.formatters[id];
+        formatter = this.model[id] instanceof Function ? this.model[id] : this.view.formatters[id];
         if ((formatter != null ? formatter.read : void 0) instanceof Function) {
           value = formatter.read.apply(formatter, [value].concat(__slice.call(args)));
         } else if (formatter instanceof Function) {
@@ -463,13 +463,15 @@
   };
 
   getInputValue = function(el) {
-    var o, _i, _len, _results;
+    var o, _i, _j, _len, _len1, _ref, _results;
 
     if (window.jQuery != null) {
       el = jQuery(el);
       switch (el[0].type) {
         case 'checkbox':
           return el.is(':checked');
+        case 'radio':
+          return jQuery("[name=\"" + el[0].name + "\"]:checked").val();
         default:
           return el.val();
       }
@@ -477,10 +479,19 @@
       switch (el.type) {
         case 'checkbox':
           return el.checked;
+        case 'radio':
+          _ref = document.getElementByName(el.name);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            el = _ref[_i];
+            if (el.checked) {
+              return el.value;
+            }
+          }
+          return null;
         case 'select-multiple':
           _results = [];
-          for (_i = 0, _len = el.length; _i < _len; _i++) {
-            o = el[_i];
+          for (_j = 0, _len1 = el.length; _j < _len1; _j++) {
+            o = el[_j];
             if (o.selected) {
               _results.push(o.value);
             }
@@ -701,6 +712,9 @@
         options = {};
       }
       view = new Rivets.View(el, models, options);
+      if (options.publish) {
+        view.publish();
+      }
       view.bind();
       return view;
     };
